@@ -25,6 +25,7 @@
     "@nestjs/config": "^0.6.3",
     "@nestjs/core": "^7.6.15",
     "@nestjs/platform-express": "^7.6.15",
+    "axios": "^0.21.1",
     "base-64": "^1.0.0",
     "html-escaper": "^3.0.3",
     "md5-hex": "^4.0.0",

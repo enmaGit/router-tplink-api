@@ -1,13 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { DeviceService } from './services/DeviceService';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly deviceService: DeviceService) {}
 
-  @Get()
-  async getHello(): Promise<any> {
-    const res = await this.appService.getUserList();
+  @Get('devices')
+  async getDevices(): Promise<any> {
+    const res = await this.deviceService.getDevices();
     return res;
   }
 }
