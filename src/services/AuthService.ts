@@ -23,7 +23,7 @@ export class AuthService {
     const { data } = await axios
       .get(`${this.IP_ROOT}/userRpm/LoginRpm.htm?Save=Save`, {
         headers: {
-          Cookie: this.authToken,
+          Cookie: this.authToken
         },
       });
 

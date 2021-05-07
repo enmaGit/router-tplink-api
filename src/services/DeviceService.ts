@@ -14,17 +14,13 @@ export class DeviceService {
     const savedData = await LocalStore.getStoreData();
 
     const response = await this.httpService
-      .get(`/userRpm/AssignedIpAddrListRpm.htm`, {
-        headers: {
-          Referer: `/userRpm/MenuRpm.htm`,
-        },
-      })
+      .get(`/userRpm/AssignedIpAddrListRpm.htm`)
       .toPromise();
 
     const userList = response.data.split('SCRIPT')[1];
 
     if (!userList) {
-      console.log('Este es el de respaldo');
+      console.log('From backup')
       return savedData;
     }
 
