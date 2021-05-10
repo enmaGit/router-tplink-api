@@ -47,6 +47,18 @@ export class DeviceService {
       });
   };
 
+  changeControlRule = (device: Device, ruleId: number): Promise<any> => {
+    return this.httpService
+      .get(`/userRpm/AccessCtrlAccessRulesRpm.htm`, {
+        params: {
+          enable: device.enable ? 0 : 1,
+          enableId: ruleId,
+          Page: 1,
+        },
+      })
+      .toPromise();
+  };
+
   changeSetup = async (mac: string, newDeviceSetup: Device): Promise<any> => {
     const deviceList = await this.getDevices();
     const deviceInfo = deviceList.find((u) => u.mac === mac);
@@ -65,17 +77,72 @@ export class DeviceService {
       newDeviceSetup.enable !== undefined &&
       newDeviceSetup.enable !== deviceInfo.enable
     ) {
-      if (!newDeviceSetup.enable) {
-        await this.addControlRuleForDevice(deviceInfo);
+      const rules = await this.getEnableStatus();
+      const ruleIdx = rules.findIndex((r) => r.hostId === deviceInfo.hostId);
+      if (ruleIdx >= 0) {
         deviceInfo.enable = newDeviceSetup.enable;
+        await this.changeControlRule(deviceInfo, ruleIdx);
+      } else {
+        deviceInfo.enable = newDeviceSetup.enable;
+        await this.addControlRuleForDevice(deviceInfo);
       }
     }
 
     await LocalStore.saveStoreData(deviceList);
   };
 
+  getEnableStatus = async (): Promise<any> => {
+    return this.httpService
+      .get(`/userRpm/AccessCtrlAccessRulesRpm.htm`)
+      .toPromise()
+      .then((res) => {
+        const partData = res.data
+          .split('SCRIPT')[1]
+          ?.split('Array(')[1]
+          .split(' );')[0]
+          .split(',')
+          .map((value) =>
+            isNaN(value.trim()) ? value.trim() : parseInt(value.trim()),
+          );
+        const dirtyRules = partData
+          ?.reduce(
+            (acum, current, idx) => {
+              const [obj, ...objs] = acum;
+              if (idx % 8 === 1) {
+                obj.hostId = current;
+                return acum;
+              } else if (idx % 8 === 7) {
+                obj.enable = current === 0 ? true : false;
+                return [{}, obj, ...objs];
+              }
+              return acum;
+            },
+            [{}],
+          )
+          .filter((rule) => rule.enable !== undefined)
+          .reverse();
+        return dirtyRules || [];
+      });
+  };
+
   getDevices = async (): Promise<any> => {
-    const savedData = await LocalStore.getStoreData();
+    const rules = await this.getEnableStatus();
+
+    const savedData = await LocalStore.getStoreData().then((devices) =>
+      devices.map((device) => {
+        if (device.hostId > -1) {
+          const rule = rules.find((rule) => rule.hostId === device.hostId);
+          if (rule) {
+            device.enable = rule.enable;
+          } else {
+            device.enable = true;
+          }
+        }
+        return device;
+      }),
+    );
+
+    await LocalStore.saveStoreData(savedData);
 
     const response = await this.httpService
       .get(`/userRpm/AssignedIpAddrListRpm.htm`)
