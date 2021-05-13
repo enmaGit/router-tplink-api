@@ -77,7 +77,7 @@ export class DeviceService {
       newDeviceSetup.enable !== undefined &&
       newDeviceSetup.enable !== deviceInfo.enable
     ) {
-      const rules = await this.getEnableStatus();
+      const rules = await this.getEnableRules();
       const ruleIdx = rules.findIndex((r) => r.hostId === deviceInfo.hostId);
       if (ruleIdx >= 0) {
         deviceInfo.enable = newDeviceSetup.enable;
@@ -88,10 +88,17 @@ export class DeviceService {
       }
     }
 
+    if (
+      newDeviceSetup.name !== undefined &&
+      newDeviceSetup.name !== deviceInfo.name
+    ) {
+      deviceInfo.name = newDeviceSetup.name;
+    }
+
     await LocalStore.saveStoreData(deviceList);
   };
 
-  getEnableStatus = async (): Promise<any> => {
+  getEnableRules = async (): Promise<any> => {
     return this.httpService
       .get(`/userRpm/AccessCtrlAccessRulesRpm.htm`)
       .toPromise()
@@ -125,8 +132,49 @@ export class DeviceService {
       });
   };
 
-  getDevices = async (): Promise<any> => {
-    const rules = await this.getEnableStatus();
+  getCurrentStatistics = async (): Promise<any> => {
+    return this.httpService
+      .get(`/userRpm/SystemStatisticRpm.htm`, {
+        params: {
+          interval: 5,
+          autoRefresh: 2,
+          sortType: 1,
+          Num_per_page: 100,
+          Goto_page: 1,
+        },
+      })
+      .toPromise()
+      .then((res) => {
+        const partData = res.data
+          .split('SCRIPT')[1]
+          ?.split('Array(')[1]
+          .split(' );')[0]
+          .split(',')
+          .map((value) =>
+            isNaN(value.trim()) ? value.trim() : parseInt(value.trim()),
+          );
+        const bytesDownloaded = partData?.reduce(
+          (acum, current, idx) => {
+            const [obj, ...objs] = acum;
+            if (idx % 13 === 2) {
+              obj.mac = current.split('"').join('');
+              return acum;
+            } else if (idx % 13 === 4) {
+              obj.bytes = current;
+              return acum;
+            } else if (idx % 13 === 12) {
+              return [{}, obj, ...objs];
+            }
+            return acum;
+          },
+          [{}],
+        );
+        return bytesDownloaded || [];
+      });
+  };
+
+  getDevices = async (): Promise<Array<Device>> => {
+    const rules = await this.getEnableRules();
 
     const savedData = await LocalStore.getStoreData().then((devices) =>
       devices.map((device) => {
@@ -190,6 +238,9 @@ export class DeviceService {
         ...user,
         enable: userSaved ? userSaved.enable : true,
         hostId: userSaved ? userSaved.hostId : -1,
+        name: userSaved ? userSaved.name : user.name,
+        speed: userSaved ? userSaved.speed : 0,
+        bytesDownloaded: userSaved ? userSaved.bytesDownloaded : 0,
       };
     });
 

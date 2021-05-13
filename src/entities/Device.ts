@@ -3,6 +3,8 @@ export default interface Device {
   mac: string;
   ip: string;
   lastConnection: string;
-  hostId: string;
+  hostId: number;
   enable: boolean;
+  bytesDownloaded: number;
+  speed: number;
 }

@@ -4,9 +4,12 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigModule } from '@nestjs/config';
 import { DeviceService } from './services/DeviceService';
 import { AuthService } from './services/AuthService';
+import { ScheduleModule } from '@nestjs/schedule';
+import { UpdateSpeedService } from './jobs/UpdateSpeedService';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     HttpModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
@@ -25,7 +28,7 @@ import { AuthService } from './services/AuthService';
     ConfigModule.forRoot({ isGlobal: true }),
   ],
   controllers: [AppController],
-  providers: [ConfigService, DeviceService],
+  providers: [ConfigService, DeviceService, UpdateSpeedService],
 })
 export class AppModule implements OnModuleInit {
   authService: AuthService;
