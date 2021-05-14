@@ -7,4 +7,5 @@ export default interface Device {
   enable: boolean;
   bytesDownloaded: number;
   speed: number;
+  type: string;
 }

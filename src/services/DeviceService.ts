@@ -95,6 +95,13 @@ export class DeviceService {
       deviceInfo.name = newDeviceSetup.name;
     }
 
+    if (
+      newDeviceSetup.type !== undefined &&
+      newDeviceSetup.type !== deviceInfo.type
+    ) {
+      deviceInfo.type = newDeviceSetup.type;
+    }
+
     await LocalStore.saveStoreData(deviceList);
   };
 
@@ -241,6 +248,7 @@ export class DeviceService {
         name: userSaved ? userSaved.name : user.name,
         speed: userSaved ? userSaved.speed : 0,
         bytesDownloaded: userSaved ? userSaved.bytesDownloaded : 0,
+        type: userSaved ? userSaved.type : 'unknown',
       };
     });
 
