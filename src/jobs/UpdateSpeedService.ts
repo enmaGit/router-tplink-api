@@ -13,7 +13,7 @@ export class UpdateSpeedService {
     const withSpeeds = devices.map((device) => {
       const stats = statistics.find((stat) => stat.mac === device.mac);
       if (device.bytesDownloaded && device.bytesDownloaded > 0) {
-        device.speed = ((stats.bytes - device.bytesDownloaded) / 10) * 8;
+        device.speed = ((stats?.bytes - device.bytesDownloaded) / 10) * 8;
       } else {
         device.speed = 0;
       }
