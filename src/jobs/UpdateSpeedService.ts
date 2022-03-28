@@ -12,13 +12,18 @@ export class UpdateSpeedService {
     const devices = await this.deviceService.getDevices();
     const withSpeeds = devices.map((device) => {
       const stats = statistics.find((stat) => stat.mac === device.mac);
-      if (device.bytesDownloaded && device.bytesDownloaded > 0) {
-        device.speed = ((stats?.bytes - device.bytesDownloaded) / 10) * 8;
+      if (stats) {
+        if (device.bytesDownloaded && device.bytesDownloaded > 0) {
+          device.speed = ((stats.bytes - device.bytesDownloaded) / 10) * 8;
+        } else {
+          device.speed = 0;
+        }
+        device.bytesDownloaded = stats.bytes || device.bytesDownloaded || 0;
+        return device;
       } else {
         device.speed = 0;
+        return device;
       }
-      device.bytesDownloaded = stats?.bytes || device.bytesDownloaded || 0;
-      return device;
     });
     await localStore.saveStoreData(withSpeeds);
   };
