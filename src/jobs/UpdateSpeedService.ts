@@ -17,7 +17,7 @@ export class UpdateSpeedService {
       } else {
         device.speed = 0;
       }
-      device.bytesDownloaded = stats.bytes;
+      device.bytesDownloaded = stats?.bytes || device.bytesDownloaded || 0;
       return device;
     });
     await localStore.saveStoreData(withSpeeds);

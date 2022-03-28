@@ -3,6 +3,8 @@
 /node_modules
 db.json
 
+.env
+
 # Logs
 logs
 *.log
